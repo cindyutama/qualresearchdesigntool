@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qualitative Research Design Guide</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Lucide React icons as inline SVG components
+        const Sparkles = ({ className }) => (
+            <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                <path d="M5 3v4"/>
+                <path d="M19 17v4"/>
+                <path d="M3 5h4"/>
+                <path d="M17 19h4"/>
+            </svg>
+        );
+
+        const Copy = ({ className }) => (
+            <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+            </svg>
+        );
+
+        const Check = ({ className }) => (
+            <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        );
+
+        const ArrowRight = ({ className }) => (
+            <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14"/>
+                <path d="m12 5 7 7-7 7"/>
+            </svg>
+        );
+
+        const ArrowLeft = ({ className }) => (
+            <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 19l-7-7 7-7"/>
+                <path d="M19 12H5"/>
+            </svg>
+        );
+
+        function ResearchDesignGuide() {
+            const [step, setStep] = useState(0);
+            const [researchQuestion, setResearchQuestion] = useState('');
+            const [analyzing, setAnalyzing] = useState(false);
+            const [paradigmRecs, setParadigmRecs] = useState([]);
+            const [selectedParadigm, setSelectedParadigm] = useState(null);
+            const [methodologyRecs, setMethodologyRecs] = useState([]);
+            const [selectedMethodology, setSelectedMethodology] = useState(null);
+            const [methodRecs, setMethodRecs] = useState([]);
+            const [selectedMethods, setSelectedMethods] = useState([]);
+            const [copied, setCopied] = useState(false);
+
+            const paradigms = [
+                { id: 'post-positivism', name: 'Post-Positivism' },
+                { id: 'constructivism', name: 'Constructivism' },
+                { id: 'interpretivism', name: 'Interpretivism' },
+                { id: 'critical-theory', name: 'Critical Theory' },
+                { id: 'post-qualitative', name: 'Post-Qualitative' }
+            ];
+
+            const methodologies = [
+                { id: 'phenomenology', name: 'Phenomenology' },
+                { id: 'ethnography', name: 'Ethnography' },
+                { id: 'grounded-theory', name: 'Grounded Theory' },
+                { id: 'case-study', name: 'Case Study' }
+            ];
+
+            const methods = [
+                { id: 'structured-interviews', name: 'Structured Interviews' },
+                { id: 'semi-structured-interviews', name: 'Semi-Structured Interviews' },
+                { id: 'unstructured-interviews', name: 'Unstructured Interviews' },
+                { id: 'focus-groups', name: 'Focus Groups' },
+                { id: 'observations', name: 'Observations' }
+            ];
+
+            const analyzeResearchQuestion = async () => {
+                setAnalyzing(true);
+                try {
+                    const response = await fetch("https://api.anthropic.com/v1/messages", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            model: "claude-sonnet-4-20250514",
+                            max_tokens: 1000,
+                            messages: [
+                                {
+                                    role: "user",
+                                    content: `Analyze this qualitative research question and rank the paradigms from most to least appropriate. Provide a brief explanation (2-3 sentences) for each.
+
+Research Question: "${researchQuestion}"
+
+Paradigms to rank:
+1. Post-Positivism
+2. Constructivism
+3. Interpretivism
+4. Critical Theory
+5. Post-Qualitative
+
+Respond ONLY with valid JSON in this exact format (no markdown, no preamble):
+{
+  "rankings": [
+    {
+      "id": "constructivism",
+      "name": "Constructivism",
+      "rank": 1,
+      "explanation": "Brief explanation here"
+    }
+  ]
+}`
+                                }
+                            ]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const text = data.content
+                        .filter(item => item.type === 'text')
+                        .map(item => item.text)
+                        .join('')
+                        .trim()
+                        .replace(/```json\n?/g, '')
+                        .replace(/```\n?/g, '');
+                    
+                    const parsed = JSON.parse(text);
+                    setParadigmRecs(parsed.rankings);
+                    setStep(2);
+                } catch (error) {
+                    console.error('Error analyzing question:', error);
+                    // Fallback recommendations
+                    setParadigmRecs([
+                        {
+                            id: "constructivism",
+                            name: "Constructivism",
+                            rank: 1,
+                            explanation: "Constructivism is often well-suited for understanding how individuals make meaning of their experiences. This paradigm assumes reality is socially constructed through human interaction and interpretation."
+                        },
+                        {
+                            id: "interpretivism",
+                            name: "Interpretivism",
+                            rank: 2,
+                            explanation: "Interpretivism focuses on understanding the subjective meanings people assign to their experiences. This approach emphasizes context and the researcher's role in interpreting data."
+                        },
+                        {
+                            id: "critical-theory",
+                            name: "Critical Theory",
+                            rank: 3,
+                            explanation: "Critical theory examines power structures and seeks to challenge social inequalities. This paradigm is particularly useful when your research aims to uncover and address systemic issues."
+                        },
+                        {
+                            id: "post-positivism",
+                            name: "Post-Positivism",
+                            rank: 4,
+                            explanation: "Post-positivism acknowledges that objective reality exists but can only be imperfectly understood. This paradigm maintains some rigor while recognizing researcher influence."
+                        },
+                        {
+                            id: "post-qualitative",
+                            name: "Post-Qualitative",
+                            rank: 5,
+                            explanation: "Post-qualitative approaches challenge traditional research paradigms and explore alternative ways of knowing. This emerging paradigm questions conventional qualitative methods."
+                        }
+                    ]);
+                    setStep(2);
+                }
+                setAnalyzing(false);
+            };
+
+            const analyzeMethodology = async (paradigm) => {
+                setAnalyzing(true);
+                setSelectedParadigm(paradigm);
+                try {
+                    const response = await fetch("https://api.anthropic.com/v1/messages", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            model: "claude-sonnet-4-20250514",
+                            max_tokens: 1000,
+                            messages: [
+                                {
+                                    role: "user",
+                                    content: `Given this research question and chosen paradigm, rank the methodologies from most to least appropriate with explanations.
+
+Research Question: "${researchQuestion}"
+Chosen Paradigm: ${paradigm.name}
+
+Methodologies to rank:
+1. Phenomenology
+2. Ethnography
+3. Grounded Theory
+4. Case Study
+
+Respond ONLY with valid JSON (no markdown):
+{
+  "rankings": [
+    {
+      "id": "phenomenology",
+      "name": "Phenomenology",
+      "rank": 1,
+      "explanation": "Brief explanation"
+    }
+  ]
+}`
+                                }
+                            ]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const text = data.content
+                        .filter(item => item.type === 'text')
+                        .map(item => item.text)
+                        .join('')
+                        .trim()
+                        .replace(/```json\n?/g, '')
+                        .replace(/```\n?/g, '');
+                    
+                    const parsed = JSON.parse(text);
+                    setMethodologyRecs(parsed.rankings);
+                    setStep(3);
+                } catch (error) {
+                    console.error('Error:', error);
+                    setMethodologyRecs([
+                        {
+                            id: "phenomenology",
+                            name: "Phenomenology",
+                            rank: 1,
+                            explanation: "Explores lived experiences and how people make meaning of phenomena. Well-suited for understanding subjective experiences in depth."
+                        },
+                        {
+                            id: "grounded-theory",
+                            name: "Grounded Theory",
+                            rank: 2,
+                            explanation: "Develops theory from data through systematic analysis. Useful when little is known about a phenomenon and you want to build new theoretical insights."
+                        },
+                        {
+                            id: "case-study",
+                            name: "Case Study",
+                            rank: 3,
+                            explanation: "Provides in-depth examination of a specific case or bounded system. Allows for rich, contextual understanding of complex phenomena."
+                        },
+                        {
+                            id: "ethnography",
+                            name: "Ethnography",
+                            rank: 4,
+                            explanation: "Studies cultural groups and practices through immersion. Requires extended fieldwork to understand social practices and meanings."
+                        }
+                    ]);
+                    setStep(3);
+                }
+                setAnalyzing(false);
+            };
+
+            const analyzeMethods = async (methodology) => {
+                setAnalyzing(true);
+                setSelectedMethodology(methodology);
+                try {
+                    const response = await fetch("https://api.anthropic.com/v1/messages", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            model: "claude-sonnet-4-20250514",
+                            max_tokens: 1000,
+                            messages: [
+                                {
+                                    role: "user",
+                                    content: `Given this research design, rank the data collection methods from most to least appropriate.
+
+Research Question: "${researchQuestion}"
+Paradigm: ${selectedParadigm.name}
+Methodology: ${methodology.name}
+
+Methods to rank:
+1. Structured Interviews
+2. Semi-Structured Interviews
+3. Unstructured Interviews
+4. Focus Groups
+5. Observations
+
+Respond ONLY with valid JSON (no markdown):
+{
+  "rankings": [
+    {
+      "id": "semi-structured-interviews",
+      "name": "Semi-Structured Interviews",
+      "rank": 1,
+      "explanation": "Brief explanation"
+    }
+  ]
+}`
+                                }
+                            ]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const text = data.content
+                        .filter(item => item.type === 'text')
+                        .map(item => item.text)
+                        .join('')
+                        .trim()
+                        .replace(/```json\n?/g, '')
+                        .replace(/```\n?/g, '');
+                    
+                    const parsed = JSON.parse(text);
+                    setMethodRecs(parsed.rankings);
+                    setStep(4);
+                } catch (error) {
+                    console.error('Error:', error);
+                    setMethodRecs([
+                        {
+                            id: "semi-structured-interviews",
+                            name: "Semi-Structured Interviews",
+                            rank: 1,
+                            explanation: "Balances structure with flexibility, allowing for both planned questions and organic conversation. Widely used in qualitative research."
+                        },
+                        {
+                            id: "unstructured-interviews",
+                            name: "Unstructured Interviews",
+                            rank: 2,
+                            explanation: "Allows participants to guide the conversation freely. Best for exploratory research where you want participants' natural narratives to emerge."
+                        },
+                        {
+                            id: "focus-groups",
+                            name: "Focus Groups",
+                            rank: 3,
+                            explanation: "Captures group dynamics and collective perspectives. Useful when social interaction might generate richer data than individual interviews."
+                        },
+                        {
+                            id: "observations",
+                            name: "Observations",
+                            rank: 4,
+                            explanation: "Provides direct insight into behaviors and contexts. Particularly valuable when actions differ from what people report in interviews."
+                        },
+                        {
+                            id: "structured-interviews",
+                            name: "Structured Interviews",
+                            rank: 5,
+                            explanation: "Uses standardized questions for consistency. More common in mixed-methods research or when comparability across participants is essential."
+                        }
+                    ]);
+                    setStep(4);
+                }
+                setAnalyzing(false);
+            };
+
+            const toggleMethod = (method) => {
+                setSelectedMethods(prev => {
+                    const exists = prev.find(m => m.id === method.id);
+                    if (exists) {
+                        return prev.filter(m => m.id !== method.id);
+                    }
+                    return [...prev, method];
+                });
+            };
+
+            const copySummary = () => {
+                const summary = `QUALITATIVE RESEARCH DESIGN
+
+Research Question:
+${researchQuestion}
+
+Paradigm: ${selectedParadigm.name}
+${selectedParadigm.explanation}
+
+Methodology: ${selectedMethodology.name}
+${selectedMethodology.explanation}
+
+Methods:
+${selectedMethods.map(m => `• ${m.name}\n  ${m.explanation}`).join('\n\n')}`;
+
+                navigator.clipboard.writeText(summary);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            };
+
+            const reset = () => {
+                setStep(0);
+                setResearchQuestion('');
+                setParadigmRecs([]);
+                setSelectedParadigm(null);
+                setMethodologyRecs([]);
+                setSelectedMethodology(null);
+                setMethodRecs([]);
+                setSelectedMethods([]);
+            };
+
+            return (
+                <div className="min-h-screen bg-white text-black font-sans">
+                    <div className="max-w-3xl mx-auto px-6 py-12">
+                        
+                        {/* Header */}
+                        {step === 0 && (
+                            <div className="text-center space-y-6 animate-fade-in">
+                                <div className="inline-block p-3 bg-red-50 rounded-full mb-4">
+                                    <Sparkles className="w-8 h-8 text-red-600" />
+                                </div>
+                                <h1 className="text-4xl font-light tracking-tight">Qualitative Research Design Guide</h1>
+                                <p className="text-lg text-gray-600 max-w-xl mx-auto">
+                                    An AI-powered tool to help you choose the right paradigm, methodology, and methods for your research.
+                                </p>
+                                <button
+                                    onClick={() => setStep(1)}
+                                    className="mt-8 px-8 py-3 bg-black text-white hover:bg-gray-800 transition-colors rounded-lg font-medium inline-flex items-center gap-2"
+                                >
+                                    Get Started
+                                    <ArrowRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Step 1: Research Question */}
+                        {step === 1 && (
+                            <div className="space-y-6 animate-fade-in">
+                                <button
+                                    onClick={() => setStep(0)}
+                                    className="text-gray-600 hover:text-black inline-flex items-center gap-2 mb-4"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    Back
+                                </button>
+                                <h2 className="text-3xl font-light">What is your research question?</h2>
+                                <p className="text-gray-600">Enter your primary qualitative research question below. Our AI will analyze it to recommend appropriate paradigms.</p>
+                                <textarea
+                                    value={researchQuestion}
+                                    onChange={(e) => setResearchQuestion(e.target.value)}
+                                    placeholder="e.g., How do first-generation college students navigate academic challenges?"
+                                    className="w-full h-40 p-4 border-2 border-gray-200 focus:border-red-500 focus:outline-none rounded-lg resize-none"
+                                />
+                                <button
+                                    onClick={analyzeResearchQuestion}
+                                    disabled={!researchQuestion.trim() || analyzing}
+                                    className="px-8 py-3 bg-black text-white hover:bg-gray-800 transition-colors rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                                >
+                                    {analyzing ? 'Analyzing...' : 'Continue'}
+                                    {!analyzing && <ArrowRight className="w-4 h-4" />}
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Step 2: Paradigm Selection */}
+                        {step === 2 && (
+                            <div className="space-y-6 animate-fade-in">
+                                <button
+                                    onClick={() => setStep(1)}
+                                    className="text-gray-600 hover:text-black inline-flex items-center gap-2 mb-4"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    Back
+                                </button>
+                                <h2 className="text-3xl font-light">Choose Your Paradigm</h2>
+                                <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-red-500">
+                                    <p className="text-sm font-medium text-gray-700">Your Research Question:</p>
+                                    <p className="text-gray-900 mt-1">{researchQuestion}</p>
+                                </div>
+                                <p className="text-gray-600">Based on your research question, here are the paradigms ranked by fit:</p>
+                                <div className="space-y-4">
+                                    {paradigmRecs.map((paradigm) => (
+                                        <button
+                                            key={paradigm.id}
+                                            onClick={() => analyzeMethodology(paradigm)}
+                                            disabled={analyzing}
+                                            className="w-full text-left p-6 border-2 border-gray-200 hover:border-red-500 transition-colors rounded-lg group disabled:opacity-50"
+                                        >
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-3 mb-2">
+                                                        <span className="inline-block w-8 h-8 rounded-full bg-red-100 text-red-600 font-bold flex items-center justify-center text-sm">
+                                                            {paradigm.rank}
+                                                        </span>
+                                                        <h3 className="text-xl font-medium">{paradigm.name}</h3>
+                                                    </div>
+                                                    <p className="text-gray-600 leading-relaxed">{paradigm.explanation}</p>
+                                                </div>
+                                                <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors flex-shrink-0 mt-1" />
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 3: Methodology Selection */}
+                        {step === 3 && (
+                            <div className="space-y-6 animate-fade-in">
+                                <button
+                                    onClick={() => setStep(2)}
+                                    className="text-gray-600 hover:text-black inline-flex items-center gap-2 mb-4"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    Back
+                                </button>
+                                <h2 className="text-3xl font-light">Choose Your Methodology</h2>
+                                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700">Paradigm:</p>
+                                        <p className="text-gray-900">{selectedParadigm.name}</p>
+                                    </div>
+                                </div>
+                                <p className="text-gray-600">Based on your paradigm choice, here are recommended methodologies:</p>
+                                <div className="space-y-4">
+                                    {methodologyRecs.map((methodology) => (
+                                        <button
+                                            key={methodology.id}
+                                            onClick={() => analyzeMethods(methodology)}
+                                            disabled={analyzing}
+                                            className="w-full text-left p-6 border-2 border-gray-200 hover:border-red-500 transition-colors rounded-lg group disabled:opacity-50"
+                                        >
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-3 mb-2">
+                                                        <span className="inline-block w-8 h-8 rounded-full bg-red-100 text-red-600 font-bold flex items-center justify-center text-sm">
+                                                            {methodology.rank}
+                                                        </span>
+                                                        <h3 className="text-xl font-medium">{methodology.name}</h3>
+                                                    </div>
+                                                    <p className="text-gray-600 leading-relaxed">{methodology.explanation}</p>
+                                                </div>
+                                                <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors flex-shrink-0 mt-1" />
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 4: Method Selection */}
+                        {step === 4 && (
+                            <div className="space-y-6 animate-fade-in">
+                                <button
+                                    onClick={() => setStep(3)}
+                                    className="text-gray-600 hover:text-black inline-flex items-center gap-2 mb-4"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    Back
+                                </button>
+                                <h2 className="text-3xl font-light">Choose Your Methods</h2>
+                                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700">Paradigm:</p>
+                                        <p className="text-gray-900">{selectedParadigm.name}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700">Methodology:</p>
+                                        <p className="text-gray-900">{selectedMethodology.name}</p>
+                                    </div>
+                                </div>
+                                <p className="text-gray-600">Select one or more data collection methods (you can choose multiple):</p>
+                                <div className="space-y-4">
+                                    {methodRecs.map((method) => {
+                                        const isSelected = selectedMethods.find(m => m.id === method.id);
+                                        return (
+                                            <button
+                                                key={method.id}
+                                                onClick={() => toggleMethod(method)}
+                                                className={`w-full text-left p-6 border-2 transition-colors rounded-lg ${
+                                                    isSelected 
+                                                        ? 'border-red-500 bg-red-50' 
+                                                        : 'border-gray-200 hover:border-red-300'
+                                                }`}
+                                            >
+                                                <div className="flex items-start gap-4">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-3 mb-2">
+                                                            <span className="inline-block w-8 h-8 rounded-full bg-red-100 text-red-600 font-bold flex items-center justify-center text-sm">
+                                                                {method.rank}
+                                                            </span>
+                                                            <h3 className="text-xl font-medium">{method.name}</h3>
+                                                            {isSelected && (
+                                                                <Check className="w-5 h-5 text-red-600 ml-auto" />
+                                                            )}
+                                                        </div>
+                                                        <p className="text-gray-600 leading-relaxed">{method.explanation}</p>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <button
+                                    onClick={() => setStep(5)}
+                                    disabled={selectedMethods.length === 0}
+                                    className="px-8 py-3 bg-black text-white hover:bg-gray-800 transition-colors rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                                >
+                                    View Summary
+                                    <ArrowRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Step 5: Summary */}
+                        {step === 5 && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="text-center">
+                                    <div className="inline-block p-3 bg-red-50 rounded-full mb-4">
+                                        <Check className="w-8 h-8 text-red-600" />
+                                    </div>
+                                    <h2 className="text-3xl font-light mb-2">Your Research Design</h2>
+                                    <p className="text-gray-600">Here's your complete qualitative research design</p>
+                                </div>
+
+                                <div className="bg-gray-50 p-8 rounded-lg space-y-6 border-2 border-gray-200">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700 uppercase tracking-wide mb-2">Research Question</p>
+                                        <p className="text-lg text-gray-900">{researchQuestion}</p>
+                                    </div>
+                                    
+                                    <div className="h-px bg-gray-300"></div>
+                                    
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700 uppercase tracking-wide mb-2">Paradigm</p>
+                                        <p className="text-lg text-gray-900">{selectedParadigm.name}</p>
+                                    </div>
+                                    
+                                    <div className="h-px bg-gray-300"></div>
+                                    
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700 uppercase tracking-wide mb-2">Methodology</p>
+                                        <p className="text-lg text-gray-900">{selectedMethodology.name}</p>
+                                    </div>
+                                    
+                                    <div className="h-px bg-gray-300"></div>
+                                    
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700 uppercase tracking-wide mb-2">Methods</p>
+                                        <ul className="space-y-2">
+                                            {selectedMethods.map(method => (
+                                                <li key={method.id} className="text-lg text-gray-900 flex items-center gap-2">
+                                                    <span className="w-1.5 h-1.5 bg-red-600 rounded-full"></span>
+                                                    {method.name}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={copySummary}
+                                        className="flex-1 px-8 py-3 border-2 border-black text-black hover:bg-black hover:text-white transition-colors rounded-lg font-medium inline-flex items-center justify-center gap-2"
+                                    >
+                                        {copied ? (
+                                            <>
+                                                <Check className="w-4 h-4" />
+                                                Copied!
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="w-4 h-4" />
+                                                Copy Summary
+                                            </>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={reset}
+                                        className="px-8 py-3 bg-black text-white hover:bg-gray-800 transition-colors rounded-lg font-medium"
+                                    >
+                                        Start Over
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ResearchDesignGuide />);
+    </script>
+</body>
+</html>
